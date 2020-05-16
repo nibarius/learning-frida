@@ -2,6 +2,7 @@
 layout: post
 title:  "Installing Frida"
 date:   2020-05-15
+comment_issue_id: 1
 ---
 
 The first thing we need to do is to install the Frida CLI tools, which is is fairly [straight forward](https://frida.re/docs/installation/). Basically you need to have python installed, then you just run `pip install frida-tools` and you're done.

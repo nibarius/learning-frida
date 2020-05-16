@@ -2,6 +2,7 @@
 layout: post
 title:  "Solving OWASP MSTG UnCrackable App for Android Level 1"
 date:   2020-05-16
+comment_issue_id: 2
 ---
 
 Now that we have [Frida set up]({{ site.baseurl }}{% post_url 2020-05-15-installing-frida %}), we can try to use it to solve the OWASP mobile security testing guide's [UnCrackable App for Android Level 1](https://github.com/OWASP/owasp-mstg/tree/master/Crackmes#uncrackable-mobile-apps).
