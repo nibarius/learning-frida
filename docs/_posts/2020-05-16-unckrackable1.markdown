@@ -133,5 +133,5 @@ We've only done fairly simple things so far, but with absolutely no prior experi
 * How to convert an array of bytes to a string
 * How to call static methods
 
-[Full code is available on GitHub](https://github.com/nibarius/learning-frida)
+[Full code is available on GitHub](https://github.com/nibarius/learning-frida/blob/master/src/unckrackable1/uncrackable1.js)
 
