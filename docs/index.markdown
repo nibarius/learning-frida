@@ -5,4 +5,4 @@
 layout: home
 ---
 
-Hi! If you're just getting started with Frida, I recommend you read the [Installing Frida]({% post_url 2020-05-15-installing-frida %}) first and continue from there.
+Hi! If you're just getting started with Frida, I recommend you read the [Installing Frida]({{ site.baseurl }}{% post_url 2020-05-15-installing-frida %}) first and continue from there.

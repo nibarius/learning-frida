@@ -4,7 +4,7 @@ title:  "Solving OWASP MSTG UnCrackable App for Android Level 1"
 date:   2020-05-16
 ---
 
-Now that we have [Frida set up]({% post_url 2020-05-15-installing-frida %}), we can try to use it to solve the OWASP mobile security testing guide's [UnCrackable App for Android Level 1](https://github.com/OWASP/owasp-mstg/tree/master/Crackmes#uncrackable-mobile-apps).
+Now that we have [Frida set up]({{ site.baseurl }}{% post_url 2020-05-15-installing-frida %}), we can try to use it to solve the OWASP mobile security testing guide's [UnCrackable App for Android Level 1](https://github.com/OWASP/owasp-mstg/tree/master/Crackmes#uncrackable-mobile-apps).
 
 This challenge have a secret hidden inside an apk somewhere and the task is to find it.
 
@@ -37,7 +37,7 @@ That's not good, looks like the app doesn't allow being run on a rooted device. 
 
 It looks like the apps does several different root checks and one check if the app is debuggable. If this is the case the method `a` is called which shows the dialog we saw and then exits as soon as the dialog is closed.
 
-{% include image.html url="/assets/uncrackable1/root_detection.png" description="Root detection code" %}
+{% include image.html url="/learning-frida/assets/uncrackable1/root_detection.png" description="Root detection code" %}
 
 Let's try to use Frida to replace the method `a` with another method that doesn't do anything.
 
@@ -62,17 +62,17 @@ By using `implementation` we can replace the implementation of the method. Let's
 
 With this in place we can run Frida again, this time doing it without first starting the app and using the command `frida -U --no-pause -l uncrackable1.js -f owasp.mstg.uncrackable1`. `-f` will start the given package and pause the main thread before the app have a chance to run. the `-l` flag provides a javascript that should be loaded. This script holds all the modifications that we will be doing to the app. Since we include a script to be loaded there is no need to pause the main thread on startup, so we pass along the `--no-pause` to prevent this.
 
-{% include image.html url="/assets/uncrackable1/root_bypassed.png" description="Root detection bypassed" %}
+{% include image.html url="/learning-frida/assets/uncrackable1/root_bypassed.png" description="Root detection bypassed" %}
 
 ## Finding the secret
 
 The app now starts and instead of the root detection dialog we just get a printout in the console. That's a good start, now we can actually use the app. Looks like there's a text field where you can enter a secret and verify it. We're not going to be able to guess the secret, so let's go back to JD-GUI and take a look at the code again.
 
-{% include image.html url="/assets/uncrackable1/verify.png" %}
+{% include image.html url="/learning-frida/assets/uncrackable1/verify.png" %}
 
 In the `MainActivity` there is a `verify()` method that calls `sg.vantagepoint.uncrackable1.a.a()` with the entered string, it seems like this method returns true if the secret is correct. Let's take a look at this method.
 
-{% include image.html url="/assets/uncrackable1/string_checker.png" %}
+{% include image.html url="/learning-frida/assets/uncrackable1/string_checker.png" %}
 
 Ok, that method seems to contain the secret encrypted with AES and base64 encoded. An obfuscated version of the encryption key seems to be there as well. The method `b` in the same class seems to handle the de-obfuscation.
 
@@ -104,7 +104,7 @@ With that in place we continue to modify the implementation `sg.vantagepoint.a.a
 
 All we have to do now is to save the file and tap the verify button in the app. Frida automatically reloads the script when saved, so you don't even have to restart Frida or the app. When pressing verify the secret is revieled in the console. Go ahead and try it in the app to make sure you got it right.
 
-{% include image.html url="/assets/uncrackable1/code_found.png" description="We got the secret code!"%}
+{% include image.html url="/learning-frida/assets/uncrackable1/code_found.png" description="We got the secret code!"%}
 
 ## Improving the process
 

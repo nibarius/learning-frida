@@ -8,4 +8,4 @@ Android security is a topic of great interest to me and the dynamic instrumentat
 
 I'm mainly working on a Windows computer, but might do some things on Linux as well. When I started this journey I had no experience at all with Frida. So even if you are completely new to Frida you should hopefully be able to follow along.
 
-When you are ready, start your journey by [installing Frida]({% post_url 2020-05-15-installing-frida %}).
+When you are ready, start your journey by [installing Frida]({{ site.baseurl }}{% post_url 2020-05-15-installing-frida %}).

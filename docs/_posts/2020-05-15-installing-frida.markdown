@@ -14,7 +14,7 @@ I did try an older Android version at first, but then Frida crashed on startup s
 
 When installing the Android system image for the emulator, pay attention to which version you are using, I'll picked an `x86_64` version since that matches my computer's architecture.
 
-{% include image.html url="/assets/install/install_emulator.png" description="Emulator setup" %}
+{% include image.html url="/learning-frida/assets/install/install_emulator.png" description="Emulator setup" %}
 
 ## Install the Frida server on the phone
 
@@ -35,12 +35,12 @@ chmod 755 ./frida-server
 
 Tip: you can see if you have root access on the phone by looking for `#` on the input line in the shell, if `$` is shown instead of `#` you don't have root access.
 
-{% include image.html url="/assets/install/adb_shell_root.png" description="Non-root vs root" %}
+{% include image.html url="/learning-frida/assets/install/adb_shell_root.png" description="Non-root vs root" %}
 
 ## Test that Frida is working
 
 Open a new console on your computer and run `frida-ps -U -a` to list all applications (`-a`) running on the phone / attached usb device (`-U`)
 
-{% include image.html url="/assets/install/listing_running_apps.png" description="Listing running apps with Frida" %}
+{% include image.html url="/learning-frida/assets/install/listing_running_apps.png" description="Listing running apps with Frida" %}
 
-Now that everything is up and running we can [get started using Frida]({% post_url 2020-05-16-unckrackable1 %}).
+Now that everything is up and running we can [get started using Frida]({{ site.baseurl }}{% post_url 2020-05-16-unckrackable1 %}).
