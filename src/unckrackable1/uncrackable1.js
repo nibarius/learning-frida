@@ -14,7 +14,7 @@ Java.perform(function(){
   // If root / debuggable app is detected this method is called which shows an error
   // message to the user and then exit. Replace the method with one that does nothing.
   Java.use("sg.vantagepoint.uncrackable1.MainActivity").a.implementation=function(s){
-    console.log("Tamper detection supressed, message was: " + s);
+    console.log("Tamper detection suppressed, message was: " + s);
   }
 
   // Automatically find the secret when onResume is called

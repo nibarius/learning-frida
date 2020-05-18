@@ -50,7 +50,7 @@ So we need to make sure we modify the app before we start it. We'll start by wri
 {% highlight javascript %}
 Java.perform(function() {
   Java.use("sg.vantagepoint.uncrackable1.MainActivity").a.implementation = function(s) {
-    console.log("Tamper detection supressed, message was: " + s);
+    console.log("Tamper detection suppressed, message was: " + s);
   }
 });
 {% endhighlight %}
