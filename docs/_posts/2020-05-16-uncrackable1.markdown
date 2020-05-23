@@ -45,7 +45,7 @@ Let's try to use Frida to replace the method `a` with another method that doesn'
 ## Bypassing root detection
 By running `frida -U owasp.mstg.uncrackable1` it's possible to attach to the application. But this requires that the application is already running. However the application does the root check on startup, and by the time we have attached it's already too late.
 
-So we need to make sure we modify the app before we start it. We'll start by writing the code needed to replace the original implementation of the `a` method. Create file called `unckrackable1.js` with the following content:
+So we need to make sure we modify the app before we start it. We'll start by writing the code needed to replace the original implementation of the `a` method. Create file called `uncrackable1.js` with the following content:
 
 {% highlight javascript %}
 Java.perform(function() {
@@ -81,7 +81,7 @@ Ok, that method seems to contain the secret encrypted with AES and base64 encode
 
 But let's ignore that, looking closer at the code it looks like `sg.vantagepoint.a.a.a` is responsible for the decryption of the secret. So if we can just see what this method returns we should be able to get our hands on the secret.
 
-Time to update `unckrackable1.js` with some additional code:
+Time to update `uncrackable1.js` with some additional code:
 {% highlight javascript %}
   function bufferToString(buf) {
     var buffer = Java.array('byte', buf);
@@ -103,7 +103,7 @@ Time to update `unckrackable1.js` with some additional code:
 
 With that in place we continue to modify the implementation `sg.vantagepoint.a.a.a` in a similar way to before. This time we first call the original implementation, convert the return value (the secret code) to a string and print it to the console before returning it.
 
-All we have to do now is to save the file and tap the verify button in the app. Frida automatically reloads the script when saved, so you don't even have to restart Frida or the app. When pressing verify the secret is revieled in the console. Go ahead and try it in the app to make sure you got it right.
+All we have to do now is to save the file and tap the verify button in the app. Frida automatically reloads the script when saved, so you don't even have to restart Frida or the app. When pressing verify the secret is revealed in the console. Go ahead and try it in the app to make sure you got it right.
 
 {% include image.html url="/learning-frida/assets/uncrackable1/code_found.png" description="We got the secret code!"%}
 
@@ -133,5 +133,5 @@ We've only done fairly simple things so far, but with absolutely no prior experi
 * How to convert an array of bytes to a string
 * How to call static methods
 
-[Full code is available on GitHub](https://github.com/nibarius/learning-frida/blob/master/src/unckrackable1/uncrackable1.js)
+[Full code is available on GitHub](https://github.com/nibarius/learning-frida/blob/master/src/uncrackable1/uncrackable1.js)
 

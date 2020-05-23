@@ -44,4 +44,4 @@ Open a new console on your computer and run `frida-ps -U -a` to list all applica
 
 {% include image.html url="/learning-frida/assets/install/listing_running_apps.png" description="Listing running apps with Frida" %}
 
-Now that everything is up and running we can [get started using Frida]({{ site.baseurl }}{% post_url 2020-05-16-unckrackable1 %}).
+Now that everything is up and running we can [get started using Frida]({{ site.baseurl }}{% post_url 2020-05-16-uncrackable1 %}).
