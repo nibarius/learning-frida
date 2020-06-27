@@ -1,0 +1,75 @@
+---
+layout: post
+title:  "Solving the EVABS instrument challenge"
+date:   2020-06-27
+comment_issue_id: 6
+---
+
+[EVABS][evabs] is an "Android application that is intentionally vulnerable so as to act as a learning platform for Android application security beginners". It has 12 different challenges of varying difficulties and the last one is intended to be solved with Frida, so that's what I'm going to do in this post.
+
+## Getting started
+Opening up the final challenge in the EVABS app shows a screen that have some mapping related details. Hitting the "Map area" button results in a "Co-ordinates Not Found!" message. The app doesn't provide any way of modifying the coordinates.
+
+{% include image.html url="/learning-frida/assets/evabs/instrument_challenge.png" description="The EVABS instrument challenge"%}
+
+It looks like we're supposed to use Frida to modify the coordinates to the correct values to get the flag printed. As a start, we use [dex2jar][dex2jar] and [JD-GUI][jd-gui] to extract and analyze the jar file. This app has a class called `Frida1` which sounds like a good start.
+
+{% include image.html url="/learning-frida/assets/evabs/code.png" description="The onClick handler for the map area button"%}
+
+## Time to write some code
+
+This class looks like the right one and the `onClick` handler seems to contain the most important code. It reads some hard coded values, does a simple calculation, and check if it should show the secret flag that is stored in native code. One approach could be to modify the hard coded values so the comparison always succeeds by finding the `Frida1` instance with `Java.choose()` and modifying the value with `instance.a.value = 100`.
+
+But the approach we're going to take is to just call the `stringFromJNI()` method and fetch the flag directly and also do this on startup so we don't have to go into the challenge activity to get the flag.
+
+This is done by by creating a new instance of the `Frida1` class and then calling `stringFromJNI()` on it.
+
+{% highlight javascript %}
+    var f = Java.use("com.revo.evabs.Frida1").$new();
+    console.log("Frida: '" + f.stringFromJNI() + "'");
+{% endhighlight %}
+
+Now we need to decide when to call this code. After looking around a bit, the `onCreate` method of the `Launch` activity feels like a good option since this is run on startup.
+
+{% highlight javascript %}
+Java.perform(function(){
+  var Launch = Java.use("com.revo.evabs.Launch");
+  Launch.onCreate.overload("android.os.Bundle").implementation = function(bundle) {
+    this.onCreate(bundle);
+    var f = Java.use("com.revo.evabs.Frida1").$new();
+    console.log("Frida: '" + f.stringFromJNI() + "'");
+  }
+});
+{% endhighlight %}
+
+## Capturing the flag
+It's time to run the code and capture the flag: `frida -U -f com.revo.evabs -l evabs.js --no-pause`
+
+{% include image.html url="/learning-frida/assets/evabs/running_frida.png" description="We got the flag"%}
+
+For some reason, calling `Frida1.stringFromJNI()` like this results in some additional junk at the end of the string. However this only happens the first time the method is called, when calling it again the junk disappears. But even with the junk, we've found the flag and since the format of it is well known it's easy to spot the junk.
+
+I can't explain where this junk is coming from, and if `stringFromJNI()` is called from the `Frida1` instance created when the challenge is opened it does not show up. It's also not seen when logged by the app itself. If you know what causes this junk, feel free to leave a comment.
+
+## Bonus content
+Several of the challenges in EVABS hides the flag in native code and these can easily be extracted the same way. For example the flag for the debug challenge can be extracted with:
+
+{% highlight javascript %}
+    var debugMe = Java.use("com.revo.evabs.DebugMe").$new();
+    console.log("debugMe: 'EVABS{" + debugMe.stringFromJNI() + "}'");
+{% endhighlight %}
+
+Unfortunately the EVABS app isn't completely stable and most of the challenges that hides the flags in native code [crash][my-bugreport] when the `stringFromJNI()` method is called on the emulator I'm using. So I haven't been able to use the same method to extract all secrets stored in native code. But it should work if running Frida on an actual device where the crash does not happen.
+
+## Things learned
+
+After solving the [UnCrackable App][uncrackable] this was a fairly simple task without any noticeable lessons, but it's always nice with more experience and to see how earlier efforts pays off.
+
+The complete code is [available on GitHub][my-code].
+
+[evabs]: https://github.com/abhi-r3v0/EVABS
+[uncrackable]: https://github.com/OWASP/owasp-mstg/tree/master/Crackmes
+[dex2jar]: https://github.com/pxb1988/dex2jar
+[jd-gui]: https://java-decompiler.github.io
+[my-bugreport]: https://github.com/abhi-r3v0/EVABS/issues/5
+[my-code]: https://github.com/nibarius/learning-frida/blob/master/src/evabs/evabs.js
