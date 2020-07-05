@@ -12,7 +12,10 @@ layout: default
       </time>
       {%- if page.author -%}
         • <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">{{ page.author }}</span></span>
-      {%- endif -%}</p>
+      {%- endif -%}
+
+      {% include pageviews.html counter_id=page.url %}
+    </p>
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">

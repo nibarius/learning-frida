@@ -1,0 +1,19 @@
+{%- assign page-view-image-id = "page-view-counter" -%}
+{% if jekyll.environment == "development" %}
+  {%- assign page_view_endpoint = "http://localhost:8080/counter?id=" -%}
+{% else %}
+  {%- assign page_view_endpoint = "https://barsk.xyz/counter?id=" -%}
+{% endif %}
+<img id="{{page-view-image-id}}" onerror="this.parentNode.removeChild(this)" style="float:right; padding-right: 8px;">
+<script>
+  const text = '{{include.counter_id}}';
+  async function digestMessage(message) {
+    const msgUint8 = new TextEncoder().encode(message);                           // encode as (utf-8) Uint8Array
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);           // hash the message
+    const hashArray = Array.from(new Uint8Array(hashBuffer));                     // convert buffer to byte array
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+    document.getElementById('{{page-view-image-id}}').src = "{{page_view_endpoint}}" + hashHex;
+    return hashHex;
+  }
+  digestMessage(text);
+</script>
