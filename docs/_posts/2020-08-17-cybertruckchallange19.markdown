@@ -192,7 +192,7 @@ The Java parts of this challenge was quite quick and easy, while the native part
 
 [jadx]: https://github.com/skylot/jadx
 [ghidra]: https://github.com/NationalSecurityAgency/ghidra
-[my-code]:https://github.com/nibarius/learning-frida/blob/master/src/cybertruck/cyber.js
+[my-code]:https://github.com/nibarius/learning-frida/blob/master/src/cybertruck19/cyber.js
 
 
 
