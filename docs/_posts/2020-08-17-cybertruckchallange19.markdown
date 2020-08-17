@@ -4,7 +4,7 @@ title:  "CyberTruckChallenge19"
 date:   2020-08-17
 comment_issue_id: 8
 ---
-The CyberTruckChallange19 is an Android Crackme / CTF with a couple of challenges intended to be solved using Frida which I'm taking doing in this post.
+The [CyberTruckChallenge19][cybertruck] is an Android Crackme / CTF with a couple of challenges intended to be solved using Frida which I'm taking doing in this post.
 
 I'm usually using Dex2Jar to convert apk files to jar files and JD-GUI to decompile the jar files to readable Java code. But Dex2Jar failed to process the cybertruck apk so I had too look for alternatives and found [JADX][jadx] instead. It's a decompiler that can open apks directly and show things like the Android manifest, resources and the decompiled source code right away. This was quite nice so I will likely use JADX instead of Dex2Jar and JD-GUI in the future.
 
@@ -189,7 +189,7 @@ The Java parts of this challenge was quite quick and easy, while the native part
 
 [Full code is available on GitHub][my-code]
 
-
+[cybertruck]: https://github.com/nowsecure/cybertruckchallenge19
 [jadx]: https://github.com/skylot/jadx
 [ghidra]: https://github.com/NationalSecurityAgency/ghidra
 [my-code]:https://github.com/nibarius/learning-frida/blob/master/src/cybertruck19/cyber.js
