@@ -86,7 +86,6 @@ The second challenge is very similar to the first, the main difference is that i
 As with the first challenge we're supposed to provide the key as a hexadecimal string, so the solution becomes very similar to to last time, we just need to pick the correct overloaded method to hook.
 
 {% highlight javascript %}
-```
 function challenge2() {
   var Challenge2 = Java.use('org.nowsecure.cybertruck.keygenerators.a');
   Challenge2.a.overload('[B', '[B').implementation = function(bArr1, bArr2) {
@@ -95,7 +94,6 @@ function challenge2() {
     return ret;
   }
 }
-```
 {% endhighlight %}
 
 ## Solving Challenge3
@@ -155,7 +153,7 @@ I'm not that familiar with assembler or native libraries, so I decided to find w
 
 Local variables are stored on the stack, and the stack grows towards lower addresses. When a function returns, the stack pointer is just updated without modifying the data that was previously on the stack. This means that when the init function returns the decoded key will still be left in memory just outside the stack.
 
-To interact with the stack we need the stack pointer. Luckily the `this` object of the interceptor callback functions contains a `context` object in addition to the previously used return pointer. This object in turn contains the stack pointer as `sp`. Now that we have the stack pointer, we just need to update our `onLeave` callback for the init function to use `hexdump` to dump enough memory for the decoded key to be visible. 
+To interact with the stack we need the stack pointer. Luckily the `this` object of the interceptor callback functions contains a `context` object in addition to the previously used return pointer. This object in turn contains the stack pointer as `sp`. Now that we have the stack pointer, we just need to update our `onLeave` callback for the init function to use `hexdump` to dump enough memory for the decoded key to be visible.
 
 {% highlight javascript %}
     onLeave: function(retval) {
@@ -173,13 +171,13 @@ To interact with the stack we need the stack pointer. Luckily the `this` object 
 
 Instead of trying to figure out exactly where this variable was stored I just used trial and error to find the appropriate amount of memory to dump. There aren't many strings on the stack, so the actual key is easy to spot.
 
-# Running the script
+## Running the script
 
 After doing a bit of cleanup ([final code][my-code]) we're ready to run the script and expose the secrets.
 
 {% include image.html url="/learning-frida/assets/cybertruck/secrets-extracted.png" description="All challenges solved" %}
 
-# Things learned
+## Things learned
 
 The Java parts of this challenge was quite quick and easy, while the native part was much more challenging and thought me a couple of great lessons:
 * `Interceptor.attach`  returns a listener object that you can call `detach()` on when the hook is no longer needed.
@@ -187,14 +185,13 @@ The Java parts of this challenge was quite quick and easy, while the native part
 * By looking at the return pointer it's possible to see who called the function in question and filter out all uninteresting calls to an imported function.
 * `this.context.sp` contains the stack pointer which is useful when having to look at data, like local variables, stored on the stack
 
+## Update 2020-08-22
+While writing this post I realized that it's possible to attach to individual instructions as well instead of attaching to functions. With this new knowledge I've taken on the third challenge one more time which I have written about in a [new post][next-post].
+
 [Full code is available on GitHub][my-code]
 
 [cybertruck]: https://github.com/nowsecure/cybertruckchallenge19
 [jadx]: https://github.com/skylot/jadx
 [ghidra]: https://github.com/NationalSecurityAgency/ghidra
 [my-code]:https://github.com/nibarius/learning-frida/blob/master/src/cybertruck19/cyber.js
-
-
-
-
-
+[next-post]: {{ site.baseurl }}{% post_url 2020-08-17-cybertruckchallange19 %}
