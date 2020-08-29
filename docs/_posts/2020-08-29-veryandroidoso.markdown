@@ -2,7 +2,7 @@
 layout: post
 title:  "DEFCON Quals 2019 Veryandroidoso"
 date:   2020-08-29
-comment_issue_id: 9
+comment_issue_id: 10
 ---
 
 This time it's time to tackle the [DEFCON Quals 2019 Veryandroidoso][challenge] challenge. It's a reverse engineering challenge with one flag that you're supposed to find. It's a bit different from the challenges I've done earlier with more focus on reversing the algorithm rather than just finding the right place to pick up the secret from.
