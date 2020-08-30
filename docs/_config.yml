@@ -27,6 +27,7 @@ baseurl: "/learning-frida" # the subpath of your site, e.g. /blog
 url: "https://nibarius.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 github_username:  nibarius
 linkedin_username: niklasbarsk
+twitter_username: NiklasBarsk
 
 # Build settings
 permalink: /:year/:month/:day/:title
