@@ -29,6 +29,10 @@ github_username:  nibarius
 linkedin_username: niklasbarsk
 twitter_username: NiklasBarsk
 
+header_pages:
+ - links.markdown
+ - about.markdown
+
 # Build settings
 permalink: /:year/:month/:day/:title
 show_excerpts: true
