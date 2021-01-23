@@ -21,6 +21,8 @@ permalink: /links/
 
 # Tools
 * [dex2jar][dex2jar] - command line tool for converting apks to jar files (among other things).
+* [Burp Suite][burp] - Popular tool among pen-testers, contains among others an http(s) proxy.
+* [Fiddler][fiddler] - A great, powerful and free http(s) proxy for Windows, my proxy of choice for analyzing, intercepting and modifying http(s) traffic.
 * [Frida][frida] - dynamic instrumentation toolkit, and also the main purpose of this blog.
 * [Ghidra][ghidra] - a free and open source reverse engineering tool, good as a free alternative to IDA.
 * [Jadx][jadx] - Java decompiler. Quick and easy to use as you can open apk files directly and see the source code.
@@ -31,3 +33,5 @@ permalink: /links/
 [jd-gui]: https://java-decompiler.github.io
 [jadx]: https://github.com/skylot/jadx
 [ghidra]: https://github.com/NationalSecurityAgency/ghidra
+[burp]: https://portswigger.net/burp/communitydownload
+[fiddler]: https://www.telerik.com/download/fiddler
