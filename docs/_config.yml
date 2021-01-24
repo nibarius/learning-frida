@@ -30,6 +30,7 @@ linkedin_username: niklasbarsk
 twitter_username: NiklasBarsk
 
 header_pages:
+ - cheat-sheet.markdown
  - links.markdown
  - about.markdown
 
