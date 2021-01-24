@@ -49,6 +49,12 @@ frida -U owasp.mstg.uncrackable1
 frida -U --no-pause -l uncrackable1.js -f owasp.mstg.uncrackable1
 ```
 
+* To upgrade Frida Follow the instructions on <https://frida.re/docs/android/> to install the latest version of frida-server on the phone. Then to upgrade Frida on the computer run:
+```
+pip install --upgrade frida-tools
+```
+
+
 # Other tools
 * From [Solving OWASP MSTG UnCrackable App for Android Level 1][uncrackable1], using dex2jar:
 ```
