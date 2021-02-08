@@ -2,7 +2,7 @@
 layout: post
 title:  "Sniffing https traffic on Android 11"
 date:   2021-01-23
-comment_issue_id: 11
+comment_issue_id: 12
 ---
 
 Being able to intercept, inspect and modify https traffic between an app and a server can be very useful. In this post I'm going to describe how you can do this with Burp Suite and the Android Studio Emulator running any Android version from 4 until 11 which is the latest version at the time of writing.
