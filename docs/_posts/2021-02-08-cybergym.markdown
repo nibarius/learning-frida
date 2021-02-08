@@ -1,0 +1,96 @@
+---
+layout: post
+title:  "Cybergym 3.0 mobile challenges"
+date:   2021-02-08
+comment_issue_id: 13
+---
+
+I recently came across the [mobile challenges][cyber-mobile] of the [Cybergym 3.0 CTF][cybergym-3] and decided to give the parts that can be solved by Frida a chance.
+
+## Lab 1 - Planet X
+
+In the [first challenge][lab1] we're presented with lock screen where we're have to provide the correct pin to see the flag.
+
+{% include image.html url="/learning-frida/assets/cybergym/lab1-pin.png" description="The flag is protected by a pin code" %}
+
+If we open up the APK file in [Jadx][jadx] we can see that a random pin code is generated every time the app is run and that it's stored in a database. Unfortunately it's using [SQLChiper][sqlchiper] instead of the standard Android database APIs, which means the database can't be easily read. But this doesn't have to stop us, when looking closer at the code we can see that it's using `equalsIgnoreCase` to compare the input with the given pin code. 
+
+{% include image.html url="/learning-frida/assets/cybergym/lab1-code.png" description="The pin checking part of the code" %}
+
+So if we just replace the `equalsIgnoreCase` implementation with something that returns true when we provide our own magic code we'll get the flag.
+
+{% highlight javascript %}
+Java.perform(function(){
+  Java.use("java.lang.String").equalsIgnoreCase.implementation = function(a) {
+    if (this == "5555") {
+      console.log("Real passcode was: " + a);
+      return true;
+    }
+    return this.equalsIgnoreCase(a);
+  };
+});
+{% endhighlight %}
+
+Now we just run Frida with this script and provide the pin 5555 and we'll be rewarded the flag.
+
+{% include image.html url="/learning-frida/assets/cybergym/lab1-frida.png" description="Launching the app with Frida reveals the actual pin code" %}
+
+## Lab 2 - Sherlocked
+
+The [second app][lab2] just show a message without really doing anything, so the first thing to do is to take a look at the code.
+
+{% include image.html url="/learning-frida/assets/cybergym/lab2-code.png" description="The MainActivity does not do much" %}
+
+The `MainActivity` doesn't do much, but it does call the method `ja.a` while ignoring the return value. So it could be interesting to take a look at what this method returns.
+
+{% highlight javascript %}
+Java.perform(function(){
+  Java.use("ja").a.overload('java.lang.String', 'java.lang.String').implementation = function(a, b) {
+    var ret = this.a(a, b);
+    console.log("flag: " + ret);
+    return ret;
+  };
+});
+{% endhighlight %}
+
+{% include image.html url="/learning-frida/assets/cybergym/lab2-frida.png" description="This was not what we were hoping for" %}
+
+It turned this method was a red herring and a false flag. The real flag is a hard coded secret that's not referred to from anywhere in the code and can be found by searching for `cygym3{` in the content included in the APK.
+
+# Lab 3 - Morty's New Tool
+
+The [third challenge][lab3] presents a button labeled "Login" which prints a hashed version of the flag. Since we need the original flag, we have to take a look at the code and try to find the flag before it's hashed.
+
+{% include image.html url="/learning-frida/assets/cybergym/lab3-code.png" description="The interesting part of the code for lab 3" %}
+
+The `MainActivity` basically just calls `t().a()` to get the hashed flag. The `a()` method does some calculations that involves native code to create both a dummy flag that's not used at all and the real flag. Just before the method returns, on line 41, the flag is passed, as a byte array, to another method that creates the hash.
+
+The `String.getBytes()` function looks like an ideal candidate for hooking, so let's hook it and see what strings it's called on.
+
+{% highlight javascript %}
+Java.perform(function(){
+  Java.use("java.lang.String").getBytes.overload('java.lang.String').implementation= function(a) {
+    console.log("getBytes called on: " + this);
+    return this.getBytes(a);
+  };
+});
+{% endhighlight %}
+
+With this small script ready, we can just pass it on to Frida to get the flag.
+
+{% include image.html url="/learning-frida/assets/cybergym/lab3-frida.png" description="Running our script provides both the decoy flag and the real the flag" %}
+
+## Lab 4 - Universe Weird C-132
+
+[Lab 4][lab4] is another problem where you're supposed to find hard coded secrets in the app resources that are not used at all by the app itself and then use that information to find the flag, so that is out of scope for this blog post. But if you're up to it, please go ahead and poke around in the resources and see if you can find something that points to the real location of the flag.
+
+[The code for labs 1-3 is available on GitHub](https://github.com/nibarius/learning-frida/blob/master/src/cybergym/)
+
+[cyber-mobile]: https://github.com/lucideus-repo/cybergym/tree/master/cybergym1/mobile
+[cybergym-3]: https://geekfreak18.wordpress.com/2020/10/10/cyber-gym-3-0-ctf-writeup/
+[jadx]: https://github.com/skylot/jadx
+[sqlchiper]: https://www.zetetic.net/sqlcipher/
+[lab1]: https://github.com/lucideus-repo/cybergym/tree/master/cybergym1/mobile/lab1
+[lab2]: https://github.com/lucideus-repo/cybergym/tree/master/cybergym1/mobile/lab2
+[lab3]: https://github.com/lucideus-repo/cybergym/tree/master/cybergym1/mobile/lab3
+[lab4]: https://github.com/lucideus-repo/cybergym/tree/master/cybergym1/mobile/lab4
