@@ -110,7 +110,7 @@ Java.perform(function(){
 })
 {% endhighlight %}
 
-That's all for this time, but please come back for the third and final part where I will cover the last two challenges I solved using Frida.
+That's all for this time, but when you're ready please [continue to the third and final part]({{ site.baseurl }}{% post_url 2021-08-29-hpandro-hidden-levels %}) where I cover the last two challenges I solved using Frida.
 
 Also if you have some good guides on how to intercept and analyze secure non-http(s) traffic such as wss and other protocols using TLS I would be really happy if you could share it.
 
