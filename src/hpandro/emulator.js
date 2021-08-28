@@ -1,4 +1,4 @@
-// version 1.1.12
+// version 1.1.15
 Java.perform(function(){
  
   var emu = Java.use('com.hpandro.androidsecurity.utils.emulatorDetection.EmulatorDetector');
@@ -12,7 +12,7 @@ Java.perform(function(){
   
   // Can't open the correct level for Emulator package check and QEMU, pressing the task button does nothing at all.
   var lastMenuName = "";
-  var act = Java.use('com.hpandro.androidsecurity.ui.fragment.HomeWebViewFragment');
+  var act = Java.use('com.hpandro.androidsecurity.utils.fragment.HomeWebViewFragment');
   act.redirectToTask.implementation = function() {
     this.redirectToTask();
     console.log("redirect to task called");
@@ -20,7 +20,7 @@ Java.perform(function(){
     // We have to open the activity ourselves instead.
     // Find the HomeWebViewFragment instance and start call startActivity on it with the appropriate class
     // when the task button is pressed.
-    Java.choose('com.hpandro.androidsecurity.ui.fragment.HomeWebViewFragment', {
+    Java.choose('com.hpandro.androidsecurity.utils.fragment.HomeWebViewFragment', {
       onMatch: function(instance) {
         var activity = instance.getActivity();
         var targetClass = null;
@@ -41,11 +41,14 @@ Java.perform(function(){
     });
   }
   
+  // Note having the code below active on startup can cause the app to crash,
+  // comment it out during startup, or just load the script after startup instead.
+  
   // Keep track of which menu entry that has been last pressed and use that as an indication
   // of which task is currently open.
   Java.use('com.hpandro.androidsecurity.ui.menu.MenuModel').getMenuName.implementation = function() {
     var ret = this.getMenuName();  
     lastMenuName = ret;
     return ret;
-  } 
+  }
 });
