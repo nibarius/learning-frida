@@ -118,7 +118,7 @@ Java.perform(function(){
 
 With this in place all that's left is a little bit of Burp magic to manipulate the response, but since this is a blog about Frida and not Burp I won't go into details on how to do that.
 
-With another flag claimed with the help of Frida it's time to wrap up for this time. Come back again later for part 2 where we take on a couple of more challenges from the hpAndro vulnerable application.
+With another flag claimed with the help of Frida it's time to wrap up for this time. When you're ready, [continue to part 2]({{ site.baseurl }}{% post_url 2021-08-28-hpandro-part2 %}) where we'll take on a couple of more challenges from the hpAndro vulnerable application.
 
 [All the Frida scripts written for these challenges are available on GitHub](https://github.com/nibarius/learning-frida/blob/master/src/hpandro/)
 
