@@ -35,6 +35,20 @@ reboot
 
 Note: `//sdcard` and similar in adb push commands is to [make it work](https://stackoverflow.com/a/17139366/1730966) with git bash on Windows.
 
+* From [Sniffing TLS traffic on Android][tls], setting up PolarProxy for sniffing TLS traffic:
+```
+# Start PolarProxy
+PolarProxy -p 443,80 -w polarproxy.pcap
+ 
+# Setup adb reverse connection
+adb reverse tcp:443 tcp:443
+ 
+# iptables setup
+adb root
+adb shell
+iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination 127.0.0.1:443
+```
+
 # Frida command line
 
 * From [Installing Frida][installing-frida], list all running applications:
@@ -63,3 +77,4 @@ d2j-dex2jar.bat -f UnCrackable-Level1.apk
 
 [installing-frida]: {{ site.baseurl }}{% post_url 2020-05-15-installing-frida %}
 [uncrackable1]: {{ site.baseurl }}{% post_url 2020-05-16-uncrackable1 %}
+[tls]: {{ site.baseurl }}{% post_url 2022-05-21-sniffing-tls-traffic %}
