@@ -1,0 +1,163 @@
+---
+layout: post
+title:  "Solving the 2022 NahamCon's CTFs"
+date:   2022-05-24
+comment_issue_id: 26
+---
+
+Recently I stumbled upon the [mobile challenges][challenges] from the [NahamCon][nahamcon] CTF. Two of them were suitable to solve with [Frida][frida], so I decided to give it a try.
+
+## Click Me
+
+The Click Me challenge is a small application with a picture of a cookie and a "Get flag" button. If you click on the cookie a counter is increased and if you click the button it tells you that you do not have enough cookies.
+
+To get started, let's take a look at the code with [jadx-gui][jadx]. Just open up the click_me.apk and look for the `MainActivity`. Here we find an interesting method called `getFlagButtonClick`
+
+{% include image.html url="/learning-frida/assets/2022-nahamcon/clickme-code.png" description="The on click handler for the flag button" %}
+
+Here we can see that the cookie has to be clicked almost hundred million times before the flag is presented. In the `cookieViewClick` method we can also see that the counter will stop increasing at roughly 13 million clicks. So clicking the cookie is obviously not the way to get the flag.
+
+What we do instead is to write a small Frida script that sets the `CLICKS` member to the desired value when the flag button is clicked.
+
+{% highlight javascript %}
+Java.perform(function(){
+  var ma = Java.use("com.example.clickme.MainActivity");
+  ma.getFlagButtonClick.implementation = function(view){
+    this.CLICKS.value = 99999999;
+    this.getFlagButtonClick(view);
+  }
+});
+{% endhighlight %}
+
+Now we just launch Frida and load this script while the app is running (`frida -U -l clickme.js com.example.clickme`) and click the button to get the flag.
+
+{% include image.html url="/learning-frida/assets/2022-nahamcon/clickme-flag.png" description="Flag acquired" %}
+
+## Secure Notes
+
+The Click Me challenge was a good warm up before taking on the Secure Notes challenge, which is a bit more of a challenge. This app asks you to provide a 4 digit pin, and will most likely tell you that it's the wrong password.
+
+{% include image.html url="/learning-frida/assets/2022-nahamcon/notes-login.png" description="The login activity" %}
+
+### Looking at the code
+
+Let's take a look at the code using jadx-gui again. Here it's the `LoginActivity` that's most interesting to start with.
+
+{% include image.html url="/learning-frida/assets/2022-nahamcon/notes-onclick.png" description="The onClick handler" %}
+
+Here we can see that the onClick handler for the button calls `d.k` with the provided pin code repeated four times and two files as arguments. If an exception is thrown the "Wrong password" error message is shown, if no exception is thrown the main activity is launched.
+
+Time to take a look at what the `d.k` method does.
+
+{% include image.html url="/learning-frida/assets/2022-nahamcon/notes-dk.png" description="The d.k method" %}
+
+This method uses AES to decrypt one of the files with the stretched pin as key. If the decryption fails, for example due to an invalid key, an exception is thrown. If it succeeds the decrypted data is written to the other file.
+
+When the main activity is later opened it will read the decrypted data and show it on the screen. So to get the flag we need to guess the right pin code. With only 10,000 different possible pins a brute force approach works really well.
+
+### Hooking the decryption method
+
+Let's hook the `d.k` method since that provides convenient access to the encrypted file. Then instead of calling it with the provided pin, we just call it with all pins sequentially until we find a pin that doesn't cause an exception to be thrown.
+
+{% highlight javascript %}
+  Java.use("o.d").k.implementation = function(pin, input, output) {
+    console.log("Starting pin brute force attempt");
+    for(let i = 0; i < 10000; ++i) {
+      let toTry = String(i).padStart(4, '0');
+      let nextPin = "" + toTry + toTry + toTry + toTry;
+      try {
+        this.k(nextPin, input, output);
+        console.log("Correct pin found: " + toTry);
+        return;
+      } catch (ex) {}
+    }
+  }
+{% endhighlight %}
+
+{% include image.html url="/learning-frida/assets/2022-nahamcon/notes-v1-frida.png" description="The pin was found surprisingly fast" %}
+
+Running this finds a pin quickly, but something is wrong. The main activity opens up, but it doesn't show anything. It seems like we found an incorrect pin that can decrypt the data without throwing an exception. But, since the decryption key is wrong, the decrypted data is just garbage.
+
+### Finding the correct pin
+
+We need to find a way to check if the data looks reasonable after decryption. To do that, we have to know what kind of data we're looking for, so let's open up the main activity and see what it expects.
+
+{% include image.html url="/learning-frida/assets/2022-nahamcon/notes-mainactivity.png" description="Part of the MainActivty's onCreate() method" %}
+
+By looking at the `onCreate()` method we can see that the data is supposed to be a JSON object. A quick and easy heuristic for detecting JSON is to check if the first byte is `{` (or 0x7b in hex).
+
+Now that we know what to look for, we need to find a suitable place to do the check. Looking back at `d.k` we can see that the decrypted data is written to another file with `FileOutputStream.write()`. This is a convenient method to hook since it's called with the decrypted data.
+
+{% highlight javascript %}
+  let fos = Java.use("java.io.FileOutputStream");
+  fos.write.overload('[B').implementation = function(bArr) {
+    if (bArr[0] == 0x7b) {
+      this.write(bArr);
+      success = true;
+    }
+  }
+{% endhighlight %}
+
+Here we hook the `write()` method that takes a byte array as input. If the first byte is 0x7b (or `{`) we call the original write method and set a `success` variable to true so that we can use this to break the brute force attempt in the `d.k` hook.
+
+### Iteration optimizations
+
+Now we should be able to run through all pins again until we find the right one to get the flag. But I felt like writing a bit more code so I decided to try to minimize the number of iterations needed to find the correct pin.
+
+There are two obvious ways of iterating through 10,000 pins. The first is that you start at 0000 and go up to 9999. The other is starting at 9999 and going down.
+
+I'm guessing that the pin is not a completely random pin, but something chosen by the creator of the CTF. If they would choose a pin close to 0000 or close to 9999 it could be found even with a very inefficient brute force method, or even by manual testing using one of the obvious methods. I'm assuming that the CTF maker has taken this into consideration and chosen a pin that's somewhere close to the middle so that you have to try several thousand pins regardless of what direction you iterate in.
+
+Due to this I'm taking a different approach and start with the pin 5000 and iterate outwards in both directions. That way I'll find pins close to the middle faster than pins toward the end.
+
+To be able to do this let's write a small function that calculates the next offset from the start pin given the current one:
+
+{% highlight javascript %}
+function nextOffset(offset) {
+  if (offset >= 0) {
+    offset++;
+  }
+  return offset * -1;
+}
+{% endhighlight %}
+
+This function basically flips the sign every time it's called and increases the value by one every second time. So when called a couple of times, with the previous offset as a parameter it will return: `-1, 1, -2, 2, -3, 3, ...`.
+
+Now we can use this function to iterate outwards from 5000 until we find the pin:
+
+{% highlight javascript %}
+  let success = false;
+  Java.use("o.d").k.implementation = function(pin, input, output) {
+    let start = 5000;
+    let offset = 0;
+    success = false;
+    console.log("Starting pin brute force attempt");
+    while (Math.abs(offset) <= 5000) {
+      toTry = String(start + offset).padStart(4, '0');
+      let nextPin = "" + toTry + toTry + toTry + toTry;
+      try {
+        this.k(nextPin, input, output);
+        if (success) return;
+      } catch (ex) {}
+      offset = nextOffset(offset);
+    }
+  }
+{% endhighlight %}
+
+### Getting the flag
+
+With this, all the code is in place and we can just load the script and tap the submit button to find the correct one. With some additional printouts added we also get some progress details from the Frida script.
+
+{% include image.html url="/learning-frida/assets/2022-nahamcon/notes-v2-frida.png" description="Running the Frida script now finds the correct pin" %}
+
+Since we abort the brute force attempt when we find the correct pin there will be no exception thrown and the main activity will be opened automatically showing us the flag.
+
+{% include image.html url="/learning-frida/assets/2022-nahamcon/notes-flag.png" description="Secure Notes flag found" %}
+
+The complete code for both these challenges is [available on GitHub][my-code].
+
+[nahamcon]: https://www.nahamcon.com
+[challenges]: https://github.com/evyatar9/Writeups/tree/master/CTFs/2022-NahamCon_CTF/Mobile
+[frida]: https://frida.re
+[jadx]: https://github.com/skylot/jadx
+[my-code]: https://github.com/nibarius/learning-frida/tree/master/src/2022-nahamcon/
