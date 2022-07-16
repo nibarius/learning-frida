@@ -10,7 +10,7 @@ permalink: /links/
 * [DEFCON Quals 2019 VeryAndroidoso][veryandroidoso] - A CTF that focus more on reversing an algorithm rather than finding a hard coded secret. It has some native code, but can be solved without working with the native code. I found this CTF fairly challenging.
 * [EVABS][evabs] - Beginner friendly CTF with several different challenges of different types. A few of them can be solved with Frida. Great to start with.
 * [Hacker101][h101] - Several different CTFs of various kinds with a couple of fairly easy Android CTFs. Some of the challenges, like the Oauthbreaker challenge can be solved with Frida. A free HackerOne account is needed to do these.
-* [hpAndro Vulnerable Application][hpandro] - An Android CTF written in Kotlin which is still under development. It currently has 100 different flags in a wide range of challenges, some of which are suitable for solving with Frida.
+* [hpAndro Vulnerable Application][hpandro] - An Android CTF written in Kotlin which is still under development. It currently has 101 different flags in a wide range of challenges, some of which are suitable for solving with Frida.
 * [UnCrackable App][uncrackable] - A couple of different CTF apps, the first has only Java code and is also fairly beginner friendly. The second introduces native code and the third hides the secret better and adds native anti tampering code that needs to be bypassed. It's quite difficult, but entirely possible without prior experience in reversing native code.
 
 [cybertruck]: https://github.com/nowsecure/cybertruckchallenge19
@@ -24,6 +24,7 @@ permalink: /links/
 # Tools
 * [dex2jar][dex2jar] - command line tool for converting apks to jar files (among other things).
 * [Burp Suite][burp] - Popular tool among pen-testers, contains among others an http(s) proxy.
+* [Bytecode Viewer][bytecode-viewer] - Java/Android decompiler. Haven't used it much, but it looks like a promising alternative to Jadx.
 * [Fiddler][fiddler] - A great, powerful and free http(s) proxy for Windows, my proxy of choice for analyzing, intercepting and modifying http(s) traffic.
 * [Frida][frida] - dynamic instrumentation toolkit, and also the main purpose of this blog.
 * [Ghidra][ghidra] - a free and open source reverse engineering tool, good as a free alternative to IDA.
@@ -32,6 +33,7 @@ permalink: /links/
 
 [frida]: https://frida.re
 [dex2jar]: https://github.com/pxb1988/dex2jar
+[bytecode-viewer]: https://github.com/Konloch/bytecode-viewer
 [jd-gui]: https://java-decompiler.github.io
 [jadx]: https://github.com/skylot/jadx
 [ghidra]: https://github.com/NationalSecurityAgency/ghidra
