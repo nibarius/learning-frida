@@ -5,7 +5,7 @@ date:   2021-08-26
 comment_issue_id: 18
 ---
 
-[hpAndro Vulnerable Application][hpandro] is an Android CTF with a lot of challenges (100 at the time of writing) and new challenges are added every now and then. The challenges are based on the [OWASP Mobile Security Testing Guide][mstg] and there are many different types of challenges available. I've solved all the challenges and in this and a few other blog posts I'm going to write about the ones I used Frida to solve.
+[hpAndro Vulnerable Application][hpandro] is an Android CTF with a lot of challenges (100 at the time of writing) and new challenges are added every now and then. The challenges are based on the [OWASP Mobile Security Testing Guide][mstg] and there are many different types of challenges available. I've solved all the challenges and in this and the next two blog posts ([part 2]({{ site.baseurl }}{% post_url 2021-08-28-hpandro-part2 %}), [part 3]({{ site.baseurl }}{% post_url 2021-08-29-hpandro-hidden-levels %})), I'm going to write about the ones I used Frida to solve.
 
 I've solved these challenges over several versions of the app, so the code in this post might require some changes to work with the latest version, especially when it comes to obfuscated names.
 
