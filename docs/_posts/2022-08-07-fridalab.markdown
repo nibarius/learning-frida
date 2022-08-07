@@ -1,0 +1,173 @@
+---
+layout: post
+title:  "Taking a look at FridaLab"
+date:   2022-08-07
+comment_issue_id: 28
+---
+
+Someone shared the [Awesome-Android-Security][aas] repository on Twitter recently and I've started looking at some of the resources there. One thing that caught my attention was the [FridaLab][fridalab] which is a beginner friendly [Frida][frida] intro. It consists of eight challenges meant to be used to practice your Frida skills. The first ones are very easy, but it gets a bit more difficult toward the end, but all in all it's a good introduction resource.
+
+If you're new to Frida I suggest that you give it a try for yourself before continuing reading. You can then compare your solutions with mine or get some help if you get stuck on some challenge.
+
+## Solving it all in one go
+
+When looking at the decompiled code for the application you can see that there is a field called `completeArr` in `MainActivity`. There is also a method called `changeColors` that checks which challenges have been solved and colors the solved ones green.
+
+So one easy way of solving everything is to just update the array so that it indicates that everything has been solved:
+
+{% highlight javascript %}
+Java.perform(function(){
+  let lab = Java.use("uk.rossmarks.fridalab.MainActivity");
+  lab.changeColors.implementation = function() {
+    this.completeArr.value = Java.array('int', [1, 1, 1, 1, 1, 1, 1, 1]);
+    this.changeColors();
+  }
+});
+{% endhighlight %}
+
+{% include image.html url="/learning-frida/assets/fridalab/all-solved.png" description="All challenges solved" %}
+
+## Solving the challenges the intended way
+
+However, this doesn't really solve any challenges and while it was fun it robs us from the experience that solving the challenges provides. So let's solve them the right way.
+
+### Challenge 1 - setting a static field
+
+In the first challenge we need to set the value of the static field chall01 to 1. You can set the values of static fields by just assigning the desired value to the `.value` attribute of the field.
+
+{% highlight javascript %}
+Java.use("uk.rossmarks.fridalab.challenge_01").chall01.value = 1;
+{% endhighlight %}
+
+### Challenge 2 - calling a non static method
+
+The second challenge requires us to call the main activity's method `chall02()`. To be able to call a method we need a reference to the class. If you're hooking a method you can just use `this` in your method implementation.
+
+Another way to get hold of a class instance is to enumerate all live instances of a certain class by using `Java.choose(className, callbacks)`. `callbacks` is an object with two functions, the first is `onMatch` which is called for each found instance. If this returns "stop" the enumeration is canceled early. The other fuction is `onComplete` which is called when all instances have been enumerated.
+
+I'm using the `Java.choose` approach here:
+
+{% highlight javascript %}
+  Java.choose("uk.rossmarks.fridalab.MainActivity", {
+      onMatch : function(instance) {
+        instance.chall02();
+        return "stop";
+      },
+      onComplete:function() {}
+    });
+{% endhighlight %}
+
+### Challenge 3 - changing the return value of a method
+
+The third challenge is straightforward, here we just need to change the return value of the method `chall03`.
+
+{% highlight javascript %}
+  Java.use("uk.rossmarks.fridalab.MainActivity").chall03.implementation = function(){
+    return true;
+  };
+{% endhighlight %}
+
+### Challenge 4 - call a method with an argument
+This is very similar to the second challenge. You need to call a method, but this time you need to provide a specific string as an argument. Just take the same solution as for the second challenge but call `chall04("frida")` instead.
+
+{% highlight javascript %}
+  Java.choose("uk.rossmarks.fridalab.MainActivity", {
+      onMatch : function(instance) {
+        instance.chall04("frida");
+        return "stop";
+      },
+      onComplete:function() {}
+    });
+{% endhighlight %}
+
+### Challenge 5 - Override the argument passed to a method
+The fifth challenge is similar to the third one, but instead of changing the return value of a method we need to change the argument before it is processed. We can do this by changing the implementation of the `chall05` method so that it calls the original implementation with the desired argument regardless of what's given.
+
+{% highlight javascript %}
+  Java.use("uk.rossmarks.fridalab.MainActivity").chall05.implementation = function(a){
+    this.chall05("frida");
+  };
+{% endhighlight %}
+
+### Challenge 6 - Some reverse engineering required
+Challenge 6 is a bit more difficult and the description isn't obvious. It says that `chall06` needs to be called after 10 seconds with the correct value. But it doesn't say 10 seconds from what point in time, or what the correct value is. So we need to study the code to understand it.
+
+In `MainActivity`'s `onCreate` we can see that the start time is set to when the activity is created. So we need to make sure we wait 10 seconds after starting the app until we solve the 6th challenge. That's not a problem.
+
+The `onCreate` method also sets up a timer that updates the expected value every 50 milliseconds. This means that we'll have to read the correct value and call `chall06` with it before the value gets reset again.
+
+This makes this a combination of challenge one and four. Just instead of changing the value of a static field we just read it and pass it along as an argument to the desired method. Here I'm also calling the desired method when the `changeColors` method is run. This is being called when the check button is pressed. This means that I can just wait with pressing the button until 10 seconds after startup and all conditions will be fulfilled.
+
+{% highlight javascript %}
+  Java.use("uk.rossmarks.fridalab.MainActivity").changeColors.implementation = function() {
+    this.chall06(Java.use("uk.rossmarks.fridalab.challenge_06").chall06.value);
+    this.changeColors();
+  }
+{% endhighlight %}
+
+### Challenge 7 - bruteforce a pin code
+The seventh challenge asks us to bruteforce a pin code. The pin code is generated at random when starting the app. Instead of brute forcing it, we could just read the correct pin like we did in the sixth challenge. But brute forcing is fun, so let's do it as intended.
+
+We just need to call `check07Pin` repeatedly until we find the correct pin and then call `chall07` with it.
+
+{% highlight javascript %}
+  let pin = ""
+  for (let i = 1000; i < 10000; i++) {
+    pin = "" + i;
+    if (Java.use("uk.rossmarks.fridalab.challenge_07").check07Pin(pin)) {
+      break;
+    }
+  }
+  Java.choose("uk.rossmarks.fridalab.MainActivity", {
+    onMatch : function(instance) {
+      instance.chall07(pin);
+      return "stop";
+    },
+    onComplete:function() {}
+  });
+{% endhighlight %}
+
+### Challenge 8 - Change the text of a button
+
+The eighth and final challenge is a bit different from the other challenges. Here we need to change the text of the button. So we need to modify a UI component rather than just manipulating class members.
+
+If you want to change the text of a button in Android you need to first find a reference to it. You can often do this by calling the `findViewById` method inside your activity and giving it the correct resource ID. The resource ID can be found fairly easily by looking at the decompiled APK, in our case it's `2131165231`.
+
+Since the view returned can be any view it needs to be casted to the appropriate type before it can be used. Once you have the button you can just call `setText` to set the text. This means that the code we would like to write would look something like this in Java:
+
+{% highlight java %}
+AppCompatButton button = (AppCompatButton)findViewById(2131165231);
+button.setText("Confirm");
+{% endhighlight %}
+
+We now need to write the equivalent JavaScript code that Frida will execute. Calling a method is easy, but casting the result is something that's new to us. This can be done by using `Java.cast()` as follows:  `Java.cast(button, Java.use('android.support.v7.widget.AppCompatButton'));`
+
+With a reference to the button at hand, the next step is to set the text. However we'll run into a small complication here. The `setText` method has various overloads, but none for a plain string so we can't pass a JavaScript string to it. One of the overloads is `CharSequence` and the Java `String` class implements this interface.
+
+We need to manually create a Java string object (`Java.use('java.lang.String').$new('Confirm')`) and pass this to the `setText` method.
+
+We can now put all of this together and solve the last challenge.
+
+{% highlight javascript %}
+  Java.choose("uk.rossmarks.fridalab.MainActivity", {
+    onMatch : function(instance) {
+      let button = instance.findViewById(2131165231);
+      let casted = Java.cast(button, Java.use('android.support.v7.widget.AppCompatButton'));
+      let text = Java.use('java.lang.String').$new('Confirm');
+      casted.setText(text);
+
+      return "stop";
+    },
+    onComplete:function() {}
+  });
+{% endhighlight %}
+
+And with that we've been able to solve all the challenges for real, and hopefully learned something along the way.
+
+The complete code for both these challenges is [available on GitHub][my-code].
+
+[aas]: https://github.com/saeidshirazi/awesome-android-security
+[fridalab]: https://rossmarks.uk/blog/fridalab/
+[frida]: https://frida.re
+[jadx]: https://github.com/skylot/jadx
+[my-code]: https://github.com/nibarius/learning-frida/tree/master/src/fridalab/
