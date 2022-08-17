@@ -1,0 +1,119 @@
+---
+layout: post
+title:  "Solving the mobile 2 challenge from HackerOne h1-702 2018 CTF"
+date:   2022-08-17
+comment_issue_id: 29
+---
+
+While going through the [Awesome Android security][aas] git repository I found an old [HackerOne CTF called H1-702 2018][h1] which contained a few [mobile challenges][ctf-apks]. The second challenge is somewhat [Frida][frida] friendly, so I decided to give it a try.
+
+## Taking a first look
+
+When you start the app you're welcomed by a pin code view. When you input a 6 digit pin it will most likely print out an error to logcat saying that the pin was wrong. The task is to figure out what the correct pin is.
+
+{% include image.html url="/learning-frida/assets/h1-702/app.png" description="The app just presents a pin code view" %}
+
+The Java code is fairly easy and the most interesting method is the `onComplete` method in the main activity's `PinLockListener` implementation.
+
+{% include image.html url="/learning-frida/assets/h1-702/code.png" description="The most interesting parts of MainActivity" %}
+
+## Understanding the app
+
+By analyzing the code of the app we can learn that it's using [libsodium][libsodium] to decrypt the flag using native code. There is also a native function `getKey` that converts the given pin code to the decryption key.
+
+I don't feel like trying to reverse engineering any of this native code so I'm going to brute force the pin code instead. To do this I'm going to use Frida to hook the `onComplete` method and call it repeatedly.
+
+The `PinLockListener` that we want to hook is implemented as an anonymous class. Anonymous classes have a generated class name similar to `<outer class name>$<number>`, where `<number>` starts at one and is incremented by one for each anonymous class. So in this case we are looking for `com.hackerone.mobile.challenge2.MainActivity$1`.
+
+Let's write a small hook that tries to call `onComplete` a couple of times to make sure we're on the right track.
+
+{% highlight javascript %}
+Java.perform(function(){
+  let listener = Java.use('com.hackerone.mobile.challenge2.MainActivity$1');
+  listener.onComplete.implementation = function(key) {
+    console.log("on complete called with key: " + key);
+    for (let i = 0; i < 100; i++) {
+      let toTry = String(i).padStart(6, '0');
+      console.log("trying " + toTry);
+      this.onComplete(toTry);
+    }
+    console.log("Done");
+  };
+});
+{% endhighlight %}
+
+Running this seems to work at first, but if you pay close attention you can see that it stalls for a long time after 50 attempts before it continues with the next pin. There seems to be some brute force protection that adds periodic delays to prevent brute force attempts.
+
+## Brute force protection bypass
+
+By going back and taking another look at the code we can see that there is a native function called `resetCoolDown()` that sounds interesting. Maybe we can call that to reset the cooldown counter and prevent the cool down from triggering.
+
+We've hooked a method in the anonymous listener so to call `resetCoolDown()` from there we need to access the outer class, which is done using `this.this$0`. Let's call the function once every 50 iterations and try running the code again.
+
+{% highlight javascript %}
+      if (i % 50 == 0) {
+        this.this$0.value.resetCoolDown();
+      }
+{% endhighlight %}
+
+## Checking for success
+The cool down reset worked fine, now the 100 iterations finishes in no time. We can now move on to the next problem: how do we know if the pin code is correct or not? `onComplete` doesn't return anything, it just prints to logcat.
+
+What the method does is to call `SecretBox.decrypt()` which in turn returns the decrypted data if it could be decrypted successfully and throws an exception if it couldn't. So let's hook that method and check the status there.
+
+{% highlight javascript %}
+  let success = false;
+  let sb = Java.use('org.libsodium.jni.crypto.SecretBox');
+  sb.decrypt.implementation = function (bArr, bArr2) {
+    let ret ="";
+    try {
+      ret = this.decrypt(bArr, bArr2);
+      success = true;
+      console.log("found the flag: " + Java.use('java.lang.String').$new(ret));
+    } catch (ex) {
+      success = false;
+      ret =  Java.array('byte', []);
+    }
+    return ret;
+  }
+{% endhighlight %}
+
+Here we create a `success` variable outside the function we're replacing so that we can read it from our `onComplete` function. We're also preventing the function from throwing an exception and instead return an empty byte array when the decryption fails. This will prevent the original `onComplete` method from printing the stack trace for each pin code we're testing.
+
+After we've tried one pin code we also have to check if it was correct and if so abort the search so we don't end up iterating through all the pins. We do this by modifying the `this.onComplete(toTry);` call in our `onComplete` implementation:
+
+{% highlight javascript %}
+      let ret = this.onComplete(toTry);
+      if (success) {
+        console.log("the correct pin is: " + toTry);
+        return ret;
+      }
+{% endhighlight %}
+
+## Try all the pins
+Now we can let the code run through the one million different combinations and wait for it to finish. We just need to decide in which order we should iterate through all possible combinations: from the start, [from the middle][middle] or from the end. I originally tried to start from the middle, but it turned out starting from the end is better in this case, so I switched to that approach instead.
+
+To start from the end we need to do a small change in our main for loop:
+{% highlight javascript %}
+    for (let i = 999999; i > 0; i--) {
+{% endhighlight %}
+
+We should also make sure to remove any unnecessary log printouts and then we run the script, wait patiently for it to finish and then finally get the flag and the correct pin.
+
+{% include image.html url="/learning-frida/assets/h1-702/solution.png" description="We finally found the flag and pin code" %}
+
+## Lessons learned
+
+While solving this challenge I ran into two things that I didn't really know how to do, which required some research. The first was how to access an anonymous class (`<outer class name>$<number>`) and the second was how to access the outer class from an inner class (`this.this$0`).  It's always fun to learn something new.
+
+Another lesson is to always make sure your code is doing what you think it is doing before you start brute forcing a large set of combinations. On my first attempt I ran through all the one million different combinations, which took about thirty minutes, without finding the correct pin. When looking more closely at the code I realized I generated a million different pins, but I never used them and instead tried the same single pin over and over again a million times. That was a bit of a waste of time.
+
+You can find the complete code for this challenge [on GitHub][my-code].
+
+[aas]: https://github.com/saeidshirazi/awesome-android-security
+[h1]: https://www.hackerone.com/ethical-hacker/jackpot-h1-702-2018-ctf-here-win-trip-biggest-live-hacking-event-2018
+[ctf-apks]: https://github.com/aadityapurani/h1-702-ctf-2018-solutions/tree/master/challenges
+[frida]: https://frida.re
+[libsodium]: https://doc.libsodium.org
+[middle]: {{ site.baseurl }}{% post_url 2022-05-24-nahamcon %}#iteration-optimizations
+[my-code]: https://github.com/nibarius/learning-frida/tree/master/src/h1-702/
