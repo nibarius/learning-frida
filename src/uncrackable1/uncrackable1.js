@@ -29,7 +29,7 @@ Java.perform(function(){
   // secret that is returned.
   Java.use("sg.vantagepoint.a.a").a.implementation=function(ba1, ba2){
     const retval = this.a(ba1, ba2);
-    console.log("secret code is: " + bufferToString(retval););
+    console.log("secret code is: " + bufferToString(retval));
     return retval;
   }
 
