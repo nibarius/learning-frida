@@ -131,7 +131,7 @@ Now we're finally ready and should be able to intercept both http and https traf
 
 {% include image.html url="/learning-frida/assets/https-sniffing/it-works.png" description="Setup complete, we can now capture https traffic on a rooted Android 11 emulator." %}
 
-When analyzing network traffic you might notice that some apps works fine when you're not looking at the traffic, but refuse to communicate with their server when you are trying to intercept the traffic. This is usually because they have implemented [certificate pinning][pinning] as a method to prevent MITM attacks. This can be bypassed using Frida, but that's a topic for another post.
+When analyzing network traffic you might notice that some apps works fine when you're not looking at the traffic, but refuse to communicate with their server when you are trying to intercept the traffic. This is usually because they have implemented [certificate pinning][pinning] as a method to prevent MITM attacks. This can be bypassed using Frida, but that's a topic for [another post][pinning-bypass].
 
 
 ### Attribution
@@ -148,6 +148,7 @@ The [MITM illustration]({{ site.baseurl }}/assets/https-sniffing/mitm.png) in th
 [fiddler]: https://www.telerik.com/download/fiddler
 [burp]: https://portswigger.net/burp/communitydownload
 [pinning]: https://expeditedsecurity.com/blog/what-is-certificate-pinning/
+[pinning-bypass]: {{ site.baseurl }}{% post_url 2022-11-18-bypassing-pinning %}
 [girl-icon]: https://thenounproject.com/icon/2095071/
 [freelancer-icon]: https://thenounproject.com/icon/3095387/
 [mmm-icon]: https://thenounproject.com/icon/352401/

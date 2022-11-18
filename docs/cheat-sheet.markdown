@@ -63,6 +63,12 @@ frida -U owasp.mstg.uncrackable1
 frida -U --no-pause -l uncrackable1.js -f owasp.mstg.uncrackable1
 ```
 
+* From [Bypassing certificate pinning with Frida][pinning-bypass]:
+```
+# Download script from https://codeshare.frida.re/@akabe1/frida-multiple-unpinning/
+frida -U -f com.whatsapp -l frida_multiple_unpinning.js --no-pause
+```
+
 * To upgrade Frida Follow the instructions on <https://frida.re/docs/android/> to install the latest version of frida-server on the phone. Then to upgrade Frida on the computer run:
 ```
 pip install --upgrade frida-tools
@@ -78,3 +84,4 @@ d2j-dex2jar.bat -f UnCrackable-Level1.apk
 [installing-frida]: {{ site.baseurl }}{% post_url 2020-05-15-installing-frida %}
 [uncrackable1]: {{ site.baseurl }}{% post_url 2020-05-16-uncrackable1 %}
 [tls]: {{ site.baseurl }}{% post_url 2022-05-21-sniffing-tls-traffic %}
+[pinning-bypass]: {{ site.baseurl }}{% post_url 2022-11-18-bypassing-pinning %}
