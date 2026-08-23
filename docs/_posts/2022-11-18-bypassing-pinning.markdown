@@ -45,7 +45,7 @@ Bypassing certificate pinning using Frida can often be quite easy if you're fami
 
 
 
-[https]: {% link _posts/2021-01-23-sniffing-https-traffic.markdown %} 
+[https]: {{ site.baseurl }}{% post_url 2021-01-23-sniffing-https-traffic %}
 [installing]: {{ site.baseurl }}{% post_url 2020-05-15-installing-frida %}
 [frida]: https://frida.re
 [mitm]: {{ site.baseurl }}{% post_url  2021-01-23-sniffing-https-traffic %}#basics
